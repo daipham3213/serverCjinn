@@ -1,0 +1,2 @@
+{% load i18n %}
+{% blocktrans %}{{ otp }} is one time password for login to {{ project_name }} in {{ expire }} minute(s).{% endblocktrans %}

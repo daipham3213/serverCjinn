@@ -1,0 +1,23 @@
+{% load i18n %}
+{% blocktrans %}
+    <div style="font-size: 1.1em;">
+        You account has been created by <span style="font-size: 1.2em;color: #267ad4; font-style: italic;font-weight: bold;">{{ org_name }}'s Admin.</span>
+    </div>
+
+    <div>
+        <p style="margin-left: 1em;">Website: <a href="{{ link_client }}">here</a></p>
+        <p style="margin-left: 1em;">
+            Username:
+            <span style="font-size: 1.2em;color: #0356fc;font-style: italic;">{{ username }}</span>
+        </p>
+        <p style="margin-left: 1em;">
+            Password:
+            <span style="font-size: 1.2em;color: #0356fc;font-style: italic;">{{ password }}</span>
+        </p>
+    </div>
+    <div>
+        <p style="margin-left: 1.2em;color: #0b294a;">
+            Please valid email after login in website.
+        </p>
+    </div>
+{% endblocktrans %}
