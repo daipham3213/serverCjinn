@@ -10,7 +10,6 @@ from django_filters import rest_framework as filters
 import sys
 import django.db.models.options as options
 
-options.DEFAULT_NAMES = options.DEFAULT_NAMES + ('in_db',)
 sys.setrecursionlimit(10000)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,7 +36,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'graphene_django',
     'django_filters',
-    'djongo',
     'apps.base',
     'apps.auths',
     'apps.account',
@@ -91,32 +89,8 @@ DATABASES = {
         'HOST': 'containers-us-west-11.railway.app',
         'PORT': '5856'
     },
-    'no_sql': {
-        'ENGINE': 'djongo',
-        'NAME': 'db-mda',
-        'CLIENT': {
-            'host': 'localhost:27017',
-        }
-    }
 }
 
-DATABASE_ROUTERS = ['apps.db_routers.DBRouter', 'apps.db_routers.NOSQLRouter']
-
-#  MONGO DB connection\
-# _MONGODB_USER = ""
-# _MONGODB_PASSWD = ""
-# _MONGODB_HOST = "localhost"
-# _MONGODB_NAME = "db-mda"
-# _MONGODB_PORT = 27017
-# _MONGODB_DATABASE_HOST = "mongodb://%s:%s@%s/%s" % (
-#     _MONGODB_USER,
-#     _MONGODB_PASSWD,
-#     _MONGODB_HOST,
-#     _MONGODB_NAME,
-# )
-#
-# mongoengine.connect(_MONGODB_NAME, host=_MONGODB_HOST, port=_MONGODB_PORT)
-#
 GRAPHENE = {"SCHEMA": "apps.base.schema.schema"}
 
 # Password validation

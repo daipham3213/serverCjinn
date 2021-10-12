@@ -12,3 +12,7 @@ THREAD_STATUS = (
     (1, _('High')),
     (2, _('Archive'))
 )
+
+DEVICE_LIMIT = 3
+
+MASTER_ID = '1cd139bb-4d8e-4ccf-b12e-afaa2f814d55'

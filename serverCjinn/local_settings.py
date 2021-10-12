@@ -12,13 +12,6 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': '3306'
     },
-    'no_sql': {
-        'ENGINE': 'djongo',
-        'NAME': 'db-mda',
-        'CLIENT': {
-            'host': 'localhost:27017',
-        }
-    }
 }
 
 # logging

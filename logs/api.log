@@ -1,52 +1,15 @@
-[23/Sep/2021-19:34:33] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\apps.py changed, reloading.
-[23/Sep/2021-19:34:36] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-19:51:43] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-19:57:39] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:06:01] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:06:03] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:07:30] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:07:32] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:20:03] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:20:06] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:21:22] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:21:24] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:22:24] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:24:37] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:25:18] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\apps.py changed, reloading.
-[23/Sep/2021-20:25:20] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:25:35] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\apps.py changed, reloading.
-[23/Sep/2021-20:25:37] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:26:24] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\apps.py changed, reloading.
-[23/Sep/2021-20:26:26] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:31:07] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\apps.py changed, reloading.
-[23/Sep/2021-20:31:09] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:31:51] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:32:59] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:35:40] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\serverCjinn\settings.py changed, reloading.
-[23/Sep/2021-20:35:42] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:36:37] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:37:38] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:42:18] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:42:20] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:42:49] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:42:51] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:43:21] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:43:22] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:45:19] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:45:21] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:46:58] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:47:00] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:47:34] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:47:36] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:48:14] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:48:15] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:48:57] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:48:58] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:50:07] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:50:08] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:53:33] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:53:35] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-20:57:34] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-20:57:36] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
-[23/Sep/2021-21:08:22] INFO [django.utils.autoreload:251] D:\Program Files\Sources\serverCjinn\apps\messenger\models\credentials.py changed, reloading.
-[23/Sep/2021-21:08:24] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:11:35] INFO [django.utils.autoreload:251] /media/henry/SSD/Program Files/Sources/serverCjinn/apps/messenger/models/credentials.py changed, reloading.
+[03/Oct/2021-10:11:38] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:12:32] INFO [django.utils.autoreload:251] /media/henry/SSD/Program Files/Sources/serverCjinn/apps/messenger/models/message_thread.py changed, reloading.
+[03/Oct/2021-10:12:34] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:13:04] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:13:17] INFO [django.utils.autoreload:251] /media/henry/SSD/Program Files/Sources/serverCjinn/apps/messenger/models/message_thread.py changed, reloading.
+[03/Oct/2021-10:13:19] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:15:51] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:42:40] INFO [django.utils.autoreload:251] /media/henry/SSD/Program Files/Sources/serverCjinn/apps/messenger/models/credentials.py changed, reloading.
+[03/Oct/2021-10:42:42] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:46:19] INFO [django.utils.autoreload:251] /media/henry/SSD/Program Files/Sources/serverCjinn/serverCjinn/settings.py changed, reloading.
+[03/Oct/2021-10:46:21] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:54:40] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:55:05] INFO [django.utils.autoreload:637] Watching for file changes with StatReloader
+[03/Oct/2021-10:56:18] WARNING [django.request:224] Not Found: /favicon.ico

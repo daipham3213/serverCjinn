@@ -95,6 +95,8 @@ class User(AuthUser):
     language = models.CharField(verbose_name=_("language"), max_length=10, choices=settings.LANGUAGE_CHOICE, blank=True,
                                 null=True)
     is_delete = models.BooleanField(verbose_name=_('delete'), default=False)
+    identityKey = models.TextField(verbose_name=_('identity key'), null=True, blank=True)
+    discoverableByPhoneNumber = models.BooleanField(verbose_name=_('discoverable by phone number'), default=True)
 
     def save(self, *args, **kwargs):
         if not getattr(self, 'username', None):
