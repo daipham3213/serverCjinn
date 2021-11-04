@@ -82,7 +82,6 @@ class Message(models.Model):
     is_pinned = models.BooleanField(verbose_name=_('is pinned message'), default=False)
 
     extras = JSONField(blank=True, null=True, default={})
-
     user_created = models.UUIDField(verbose_name=_('user created'), null=True, blank=True)
     date_created = models.DateTimeField(verbose_name=_('created date'), default=timezone.now, editable=False)
     date_modified = models.DateTimeField(verbose_name=_('modified date'), default=timezone.now)

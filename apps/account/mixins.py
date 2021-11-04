@@ -181,7 +181,7 @@ class AuthLoginMixin(Output):
                 last_login = user.last_login
                 login(info.context, user)
                 result = user_details(info.context, user, last_login)
-                authorization_log(user=user.id, remarks=_('The user logged in.'), data={})
+                authorization_log(user=user.id, remarks=_('user logged in.'), data={})
                 return cls(success=True, result={**result})
             return cls(success=False, errors={'username': Messages.INVALID_CREDENTIALS})
         except exceptions.InvalidEmail as e:
@@ -280,6 +280,3 @@ class ResetPasswordMixin(Output):
             logger.error(
                 format_message(cls, request.method, 'error', request.user.username, request.user.id, request.body, e))
             return cls(success=False, errors={'message': e})
-
-
-

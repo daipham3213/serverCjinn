@@ -7,9 +7,40 @@ from django.utils.translation import ugettext_lazy as _
 from django.db import models
 from jsonfield import JSONField
 
-from apps.messenger.models.key import SignedPreKey
+from apps.messenger.exceptions import PreKeyCountExceededError
+from apps.messenger.utils import AuthenticationCredentials
 
 UserModel = get_user_model()
+
+
+class PreKey(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    public_key = models.TextField(verbose_name=_('public key'))
+    device = models.ForeignKey('DeviceInfo', verbose_name=_('device pre key'), on_delete=models.CASCADE, null=True,
+                               blank=True)
+
+    # preKeyState = models.ForeignKey('PreKeyState', verbose_name=_('list pre keys'), on_delete=models.CASCADE)
+
+    class Meta:
+        verbose_name = _('Preparation Key')
+        verbose_name_plural = _('Preparation Keys')
+        default_permissions = ()
+
+    @staticmethod
+    def create(registration_id, user, *args, **kwargs):
+        device_ref = DeviceInfo.objects.filter(user=user, registrationId=registration_id).get()
+        if device_ref.prekey_set.count() > 99:
+            raise PreKeyCountExceededError()
+        return PreKey.create(*args, **kwargs)
+
+
+class SignedPreKey(PreKey):
+    signature = models.TextField(verbose_name=_('pre-key signature'))
+
+    class Meta:
+        verbose_name = _('Signed pre-key')
+        verbose_name_plural = _('Signed pre-keys')
+        default_permissions = ()
 
 
 class DeviceInfo(models.Model):
@@ -20,22 +51,24 @@ class DeviceInfo(models.Model):
     token = models.TextField(verbose_name=_('auth token'), null=True, blank=True)
     salt = models.TextField(null=True, blank=True)
 
-    gcmId = models.TextField(null=True, blank=True)
-    apnId = models.TextField(null=True, blank=True)
-    voidApnId = models.TextField(null=True, blank=True)
+    gcm_id = models.TextField(null=True, blank=True)
+    apn_id = models.TextField(null=True, blank=True)
+    void_apn_id = models.TextField(null=True, blank=True)
 
-    pushTimeStamp = models.DateTimeField(default=timezone.now)
-    fetchesMessages = models.BooleanField(default=False)
+    push_time_stamp = models.DateTimeField(default=timezone.now)
+    fetches_messages = models.BooleanField(default=False)
 
-    registrationId = models.UUIDField(null=True, blank=True)
-    signedPreKey = models.OneToOneField(
+    registration_id = models.UUIDField(null=True, blank=True)
+    signed_pre_key = models.OneToOneField(
         to=SignedPreKey,
         verbose_name=_('signed preKey'),
-        on_delete=models.DO_NOTHING
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
     )
 
     last_seen = models.DateTimeField(verbose_name=_('last seen time'), default=timezone.now)
-    created_date = models.DateField(verbose_name=_('session created date'), default=timezone.now)
+    created_date = models.DateField(verbose_name=_('session created date'), default=timezone.now, editable=False)
 
     class Meta:
         verbose_name = _('Device info')
@@ -53,21 +86,48 @@ class DeviceInfo(models.Model):
         )
 
     def is_enabled(self):
-        has_channel = self.fetchesMessages or self.apnId or self.gcmId
-        return (self.id == settings.MASTER_ID and self.signedPreKey is not None and has_channel) or (
-                self.id != settings.MASTER_ID and has_channel and self.signedPreKey is not None and (
+        has_channel = self.fetches_messages or self.apn_id or self.gcm_id
+        return (self.id == settings.MASTER_ID and self.signed_pre_key is not None and has_channel) or (
+                self.id != settings.MASTER_ID and has_channel and self.signed_pre_key is not None and (
                 self.last_seen - timezone.now()) < 30)
 
     def is_master(self):
         return self.id == settings.MASTER_ID
+
+    @staticmethod
+    def get_enable_device_count(user):
+        count = 0
+        devices = DeviceInfo.objects.filter(user=user)
+        for device in devices:
+            if device.is_enable():
+                count += 1
+        return count
+
+    @staticmethod
+    def create_credentials(auth_token, salt=None):
+        credentials = AuthenticationCredentials(auth_token, salt)
+        return credentials.hashed_auth_token, credentials.salt
+
+    @classmethod
+    def create(cls, user, password, registration_id, fetches_messages=False, token=None, *args, **kwargs):
+        auth_token, salt = cls.create_credentials(password)
+        return DeviceInfo.objects.create(user=user, token=auth_token, salt=salt, registration_id=registration_id,
+                                         fetches_messages=fetches_messages, *args, **kwargs)
 
 
 class UserInfo(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=True)
     user = models.ForeignKey(UserModel, verbose_name=_('user credentials'), on_delete=models.CASCADE)
 
-    friend = models.ManyToManyField(UserModel, verbose_name=_('user friends'), null=True, blank=True, related_name='user_friends')
-    thread = models.ManyToManyField(UserModel, verbose_name=_('user threads'), null=True, blank=True, related_name='user_threads')
+    friend = models.ManyToManyField(
+        UserModel,
+        symmetrical=False,
+        blank=True,
+        verbose_name=_('user friends'),
+        related_name='user_friends',
+        related_query_name='user_info'
+    )
+    thread = models.TextField(verbose_name=_('user threads'), null=True, blank=True)
 
     extras = JSONField(default={})
     created_date = models.DateField(verbose_name=_('session created date'), default=timezone.now)

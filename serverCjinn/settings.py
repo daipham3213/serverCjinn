@@ -23,7 +23,7 @@ SECRET_KEY = 'django-insecure-4b_6g*ebq8%4u2=zx7o6xy=0j^a3f6(xzsi+azv#nz#71946x+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -34,8 +34,10 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'corsheaders',
     'graphene_django',
     'django_filters',
+    'channels',
     'apps.base',
     'apps.auths',
     'apps.account',
@@ -76,6 +78,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'serverCjinn.wsgi.application'
+ASGI_APPLICATION = 'serverCjinn.router.application'
+
+CORS_ALLOWED_ORIGINS = ['http://127.0.0.1']
+CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
 
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
@@ -91,7 +97,11 @@ DATABASES = {
     },
 }
 
-GRAPHENE = {"SCHEMA": "apps.base.schema.schema"}
+GRAPHENE = {
+    "SCHEMA": "apps.base.schema.schema",
+    "SUBSCRIPTION_PATH": "/ws/graphql",
+    "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": True,
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/3.2/ref/settings/#auth-password-validators
