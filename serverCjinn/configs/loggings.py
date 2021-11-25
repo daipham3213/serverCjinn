@@ -1,4 +1,5 @@
 import os
+
 from django.conf import settings
 
 # logging
@@ -17,6 +18,10 @@ LOGGING = {
         'filter_format': {
             'format': '[%(asctime)s] [%(count)s] [%(levelname)s] [API: %(api_name)s] [username: %(username)s] [count: %(count)s] SQL: %(message)s',
             'datefmt': "%d/%m/%Y-%H:%M:%S"
+        },
+        "rq_console": {
+            "format": "%(asctime)s %(message)s",
+            "datefmt": "%H:%M:%S",
         },
     },
     'handlers': {
@@ -38,6 +43,12 @@ LOGGING = {
             'backupCount': 10,
             'formatter': 'filter_format',
         },
+        "rq_console": {
+            "level": "DEBUG",
+            "class": "rq.utils.ColorizingStreamHandler",
+            "formatter": "rq_console",
+            "exclude": ["%(asctime)s"],
+        },
     },
     'loggers': {
         '': {
@@ -51,6 +62,10 @@ LOGGING = {
         'filter': {
             'handlers': ['filter_log'],
             'level': 'INFO'
-        }
+        },
+        "rq.worker": {
+            "handlers": ["rq_console", "sentry"],
+            "level": "DEBUG"
+        },
     },
 }

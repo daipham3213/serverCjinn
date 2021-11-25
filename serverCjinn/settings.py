@@ -1,14 +1,14 @@
 import os
+import sys
 from pathlib import Path
 
-from django.utils.translation import ugettext_lazy as _
+import django.db.models.options as options
 import django_opentracing
+from django.utils.translation import ugettext_lazy as _
 from django_filters import rest_framework as filters
+from firebase_admin import initialize_app, credentials
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-
-import sys
-import django.db.models.options as options
 
 sys.setrecursionlimit(10000)
 
@@ -34,9 +34,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'fcm_django',
     'corsheaders',
     'graphene_django',
     'django_filters',
+    'django_rq',
     'channels',
     'apps.base',
     'apps.auths',
@@ -80,9 +82,41 @@ TEMPLATES = [
 WSGI_APPLICATION = 'serverCjinn.wsgi.application'
 ASGI_APPLICATION = 'serverCjinn.router.application'
 
-CORS_ALLOWED_ORIGINS = ['http://127.0.0.1']
-CHANNEL_LAYERS = {"default": {"BACKEND": "channels.layers.InMemoryChannelLayer"}}
+CORS_ALLOWED_ORIGINS = ['http://127.0.0.1', 'http://192.168.1.10', 'http://192.168.1.9']
 
+SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_DOMAIN = 'localhost'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/0",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
+        }
+    }
+}
+
+RQ_QUEUES = {
+    # 'default': {
+    #     'HOST': 'localhost',
+    #     'PORT': 6379,
+    #     'DB': 0,
+    # },
+    'default': {
+        'USE_REDIS_CACHE': 'default',
+    },
+}
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -97,10 +131,27 @@ DATABASES = {
     },
 }
 
+FIREBASE_APP = initialize_app(credentials.Certificate(os.path.join(BASE_DIR, 'data/firebase-adminsdk.json')))
+FCM_DJANGO_SETTINGS = {
+    # default: _('FCM Django')
+    "APP_VERBOSE_NAME": "[DEFAULT]",
+    # true if you want to have only one active device per registered user at a time
+    # default: False
+    "ONE_DEVICE_PER_USER": False,
+    # devices to which notifications cannot be sent,
+    # are deleted upon receiving error response from FCM
+    # default: False
+    "DELETE_INACTIVE_DEVICES": True,
+}
+
+# WEBSOCKET_PATH = r'^graphql(?:/(?P<token>\w+|))(?:/(?P<device_id>[-\w]+))?/?'
+WEBSOCKET_PATH = 'graphql'
 GRAPHENE = {
     "SCHEMA": "apps.base.schema.schema",
-    "SUBSCRIPTION_PATH": "/ws/graphql",
+    "SUBSCRIPTION_PATH": '/' + WEBSOCKET_PATH,
     "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": True,
+    "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
+    "SCHEMA_OUTPUT": "data/schema.json",
 }
 
 # Password validation
@@ -124,6 +175,7 @@ AUTH_PASSWORD_VALIDATORS = [
 AUTH_USER_MODEL = 'account.User'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
+    'django.contrib.auth.backends.RemoteUserBackend',
     'apps.base.authentication.TokenAuthentication',
     'apps.auths.backends.account_backend.AccountBackend',
 ]

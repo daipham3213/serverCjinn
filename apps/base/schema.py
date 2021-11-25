@@ -1,20 +1,20 @@
-import channels
-import channels_graphql_ws
 import graphene
 from graphene_django.debug import DjangoDebug
+
 from .converter import FieldsPatches
 
 # Converters - Must be put above other schema imports!!
-from ..messenger.schema import MessengerMutation, MessengerQuery
 
 FieldsPatches()
 
 # Schemas
 from apps.log.schema import LogQuery
 from apps.account.schema import AccountMutation, UserQuery
+from ..messenger.schema import MessengerMutation, MessengerQuery, MessengerSubscriptions
 
 
-class Subscription(graphene.ObjectType):
+class Subscription(MessengerSubscriptions, graphene.ObjectType):
+    # messenger = graphene.Field(MessengerSubscriptions)
     pass
 
 
@@ -51,4 +51,4 @@ class Query(graphene.ObjectType):
         return UserQuery()
 
 
-schema = graphene.Schema(query=Query, mutation=Mutation)
+schema = graphene.Schema(query=Query, mutation=Mutation, subscription=Subscription)

@@ -9,8 +9,8 @@ from django.core.validators import EmailValidator
 from django.utils import timezone
 from django.utils.translation import gettext as _
 
-from apps.account.constants import Messages
 from apps.account import exceptions
+from apps.account.constants import Messages
 from apps.auths.models import Token
 from apps.auths.utils import user_details
 from apps.base.middleware import get_user_extra

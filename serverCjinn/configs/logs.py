@@ -13,3 +13,7 @@ HISTORY_ACTION_NAME = (
     ('comment', _('Comment')),
     ('share', _('Share'))
 )
+
+DOCS_CODE = (
+    ('key_bundle_update', _('update key bundle'))
+)

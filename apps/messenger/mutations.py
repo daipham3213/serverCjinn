@@ -3,7 +3,7 @@ import graphene
 from apps.base.converter import AutoCamelCasedScalar
 from apps.base.mixins import DynamicArgsMixin, MutationMixin
 from apps.messenger.mixins import AddSignedPreKeyMixin, AddKeyBundleMixin, CreateDeviceTokenMixin, \
-    VerifyDeviceTokenMixin, RemoveDeviceMixin
+    VerifyDeviceTokenMixin, RemoveDeviceMixin, SendMessageMixin, AddThreadMixin, UpdateDeviceInfoMixin
 
 
 class PreKeyInput(graphene.InputObjectType):
@@ -52,9 +52,34 @@ class VerifyDeviceToken(MutationMixin, VerifyDeviceTokenMixin, DynamicArgsMixin,
     _required_args = ['password', 'registrationId', 'otp', 'deviceName']
 
 
+class UpdateDeviceInfo(MutationMixin, UpdateDeviceInfoMixin, DynamicArgsMixin, graphene.Mutation):
+    __doc__ = UpdateDeviceInfoMixin.__doc__
+
+    result = AutoCamelCasedScalar()
+
+    args = ['gcm_id', 'apn_id', 'void_apn_id']
+
+
 class RemoveDevice(MutationMixin, DynamicArgsMixin, RemoveDeviceMixin, graphene.Mutation):
     __doc__ = RemoveDeviceMixin.__doc__
 
     result = AutoCamelCasedScalar()
 
-    _required_args = ['deviceId']
+    _required_args = ['registration_id']
+
+
+class SendMessage(MutationMixin, DynamicArgsMixin, SendMessageMixin, graphene.Mutation):
+    __doc__ = SendMessageMixin.__doc__
+
+    result = AutoCamelCasedScalar()
+
+    _required_args = ['thread_id', 'content']
+    _args = ['reply_to', 'extras']
+
+
+class AddThread(MutationMixin, DynamicArgsMixin, AddThreadMixin, graphene.Mutation):
+    __doc__ = AddThreadMixin.__doc__
+
+    result = AutoCamelCasedScalar()
+
+    _required_args = ['name', 'member_ids', 'is_encrypt']

@@ -1,9 +1,8 @@
-from django.utils.translation import ugettext_lazy as _
-from django.forms import ModelForm
-
-from jsonfield import JSONField
-
 import json
+
+from django.forms import ModelForm
+from django.utils.translation import ugettext_lazy as _
+from jsonfield import JSONField
 
 
 # override module ModelForm when JSONField

@@ -1,19 +1,21 @@
+import logging
 import uuid as uuid
+from re import sub
+from threading import local
+from urllib.parse import parse_qs
+
+from channels.db import database_sync_to_async
+from channels.middleware import BaseMiddleware
+from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
-from django.conf import settings
+from django.utils import translation, timezone
 from django.utils.deprecation import MiddlewareMixin
-from django.utils import translation
-
-from threading import local
-
-from re import sub
-
-import logging
 
 from apps.account.models import User
 from apps.base.mixins import Output
 from apps.base.models import Token
+from apps.messenger.models import DeviceInfo
 
 logger = logging.getLogger(__name__)
 
@@ -27,35 +29,60 @@ def get_user_extra():
 class CjinnMiddleware(MiddlewareMixin, Output):
     def process_request(self, request):
         is_dropdown = True if request.META.get('HTTP_VIEWTOKEN', False) == settings.KEY_VIEW_TOKEN else False
+        device_token = request.META.get('HTTP_DEVICE_TOKEN', None)
         header_token = request.META.get('HTTP_AUTHORIZATION', None)
-        if header_token is not None:
+        if device_token is not None:
+            try:
+                device_token = sub('Bearer ', '', request.META.get('HTTP_DEVICE_TOKEN', None))
+                device = DeviceInfo.objects.get(token=device_token)
+                # mark stale devices
+                device.last_seen = timezone.now()
+                device.is_stale = False
+                device.save()
+                for other_device in DeviceInfo.objects.exclude(token=device_token):
+                    other_device.is_stale = True
+                    other_device.save()
+
+                request.device = device
+                request.user = device.user
+            except DeviceInfo.DoesNotExist:
+                pass
+        elif header_token is not None:
             try:
                 token = sub('Bearer ', '', request.META.get('HTTP_AUTHORIZATION', None))
                 token_obj = Token.objects.get(key=token)
                 request.user = token_obj.user
             except Token.DoesNotExist:
                 request.user = AnonymousUser()
+                request.device = None
                 header_language = request.META.get('HTTP_LANGUAGE', None)
                 if header_language is not None:
                     if header_language in dict(settings.LANGUAGE_CHOICE):
                         request.session['LANGUAGE'] = header_language
                         translation.activate(header_language)
-                # if request.path != settings.LOGIN_PATH:
-                #     raise exceptions.SessionExpired
+        else:
+            request.user = AnonymousUser()
+            request.device = None
+            header_language = request.META.get('HTTP_LANGUAGE', None)
+            if header_language is not None:
+                if header_language in dict(settings.LANGUAGE_CHOICE):
+                    request.session['LANGUAGE'] = header_language
+                    translation.activate(header_language)
         user = getattr(request, 'user', None)
+        device = getattr(request, 'device', None)
         if hasattr(user, 'is_authenticated') and user.is_authenticated and not user.is_staff:
             try:
                 _thread_locals.user_extra = request.user_extra = {
                     'is_dropdown': is_dropdown,
                     'user': user,
                     'token': header_token,
-                    'is_admin': user.is_superuser | user.is_staff
+                    'is_admin': user.is_superuser | user.is_staff,
+                    'device': device
                 }
 
                 # language
-                header_language = request.META.get('LANGUAGE', None) if request.META.get('LANGUAGE',
-                                                                                         None) else request.META.get(
-                    'HTTP_LANGUAGE', None)
+                header_language = request.META.get('LANGUAGE', None) if \
+                    request.META.get('LANGUAGE', None) else request.META.get('HTTP_LANGUAGE', None)
                 if header_language is not None:
                     if header_language in dict(settings.LANGUAGE_CHOICE):
                         request.session['LANGUAGE'] = header_language
@@ -115,3 +142,23 @@ class OnlineNowMiddleware(MiddlewareMixin):
         # Set the new cache
         cache.set('online-%s' % (request.user.pk,), True, ONLINE_THRESHOLD)
         cache.set('online-now', online_now_ids, ONLINE_THRESHOLD)
+
+
+@database_sync_to_async
+def get_user_by_token(token_key):
+    try:
+        token = Token.objects.get(key=token_key)
+        return token.user
+    except Token.DoesNotExist:
+        return AnonymousUser()
+
+
+class TokenAuthMiddleware(BaseMiddleware):
+    def __init__(self, inner):
+        super().__init__(inner)
+
+    async def __call__(self, scope, receive, send):
+        params = parse_qs(scope["query_string"].decode())
+        scope['user'] = await get_user_by_token(params.get('token', None))
+
+        return await super().__call__(scope, receive, send)
