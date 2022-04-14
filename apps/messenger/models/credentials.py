@@ -1,14 +1,13 @@
 from uuid import uuid4
 
-from asgiref.sync import sync_to_async
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-from jsonfield import JSONField
 
 from apps.messenger.exceptions import PreKeyCountExceededError
+from apps.messenger.func import get_user_cache
 from apps.messenger.utils import AuthenticationCredentials
 
 UserModel = get_user_model()
@@ -39,12 +38,9 @@ class PreKey(models.Model):
 class SignedPreKey(models.Model):
     id = models.PositiveIntegerField(primary_key=True)
     public_key = models.TextField(verbose_name=_('public key'))
-    device = models.ForeignKey('DeviceInfo', verbose_name=_('device pre key'), on_delete=models.CASCADE, null=True,
-                               blank=True)
     signature = models.TextField(verbose_name=_('pre-key signature'))
 
     class Meta:
-        unique_together = (('id', 'device_id'),)
         verbose_name = _('Signed pre-key')
         verbose_name_plural = _('Signed pre-keys')
         default_permissions = ()
@@ -101,6 +97,28 @@ class DeviceInfo(models.Model):
                 not self.is_master and has_channel and self.signed_pre_key is not None and (
                 self.last_seen - timezone.now()) < 30)
 
+    @classmethod
+    def check_device_availability(cls, device):
+        if not device.apn_id and not device.gcm_id and not get_user_cache(device.user_id):
+            raise Exception('Unable to communicate with receiver')
+        method = ''
+        user_cache = get_user_cache(device.user_id)
+        if user_cache:
+            dev = user_cache.find_device(str(device.id))
+            if dev and dev.incoming_msg:
+                method = 'websocket'
+            else:
+                device.fetches_messages = False
+                device.save()
+        if method != '':
+            return method
+        elif device.gcm_id:
+            method = 'gcm'
+        elif device.apn_id:
+            method = 'apn'
+
+        return method
+
     @staticmethod
     def get_enable_device_count(user):
         count = 0
@@ -118,27 +136,24 @@ class DeviceInfo(models.Model):
     @classmethod
     def create(cls, user, password, registration_id, fetches_messages=False, token=None, *args, **kwargs):
         auth_token, salt = cls.create_credentials(password)
+        has_device = DeviceInfo.objects.filter(user=user).count()
         return DeviceInfo.objects.create(user=user, token=auth_token, salt=salt, registration_id=registration_id,
-                                         fetches_messages=fetches_messages, *args, **kwargs)
+                                         fetches_messages=fetches_messages, is_master=has_device == 0, *args, **kwargs)
 
 
 class UserInfo(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid4, editable=True)
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     user = models.ForeignKey(UserModel, verbose_name=_('user credentials'), on_delete=models.CASCADE)
+    contacts = models.TextField(verbose_name=_('user contacts'), null=True, blank=True, default='')
+    threads = models.ManyToManyField(
+        'Thread',
+        through='MemberInfo',
+        verbose_name=_('user threads'),
+        blank=True,
+        symmetrical=False,
+    )
 
-    # friend = models.ManyToManyField(
-    #     'self',
-    #     symmetrical=False,
-    #     blank=True,
-    #     verbose_name=_('user friends'),
-    #     related_name='user_friends',
-    #     related_query_name='user_info'
-    # )
-
-    contacts = models.TextField(verbose_name=_('user contacts'), null=True, blank=True)
-    thread = models.TextField(verbose_name=_('user threads'), null=True, blank=True)
-
-    extras = JSONField(default=dict)
+    extras = models.JSONField(default=dict)
     created_date = models.DateField(verbose_name=_('session created date'), default=timezone.now)
 
     class Meta:
@@ -156,29 +171,37 @@ class UserInfo(models.Model):
             ('delete_credential', _('Can delete credential'))
         )
 
-    @sync_to_async
+    def get_friend_requests(self):
+        requests = self.extras.get('friend_request', {})
+        return requests
+
     def send_friend_request(self, user_id):
-        friend = self.objects.get(user_id=user_id)
+        # init friend request data
+        friend = UserInfo.objects.get(user_id=user_id)
+        if friend.extras.get('friend_request', None) is None:
+            friend.extras['friend_request'] = {}
+        if self.extras.get('friend_request', None) is None:
+            self.extras['friend_request'] = {}
+        # check if user_id in contact
+        if self.contacts and self.contacts.__contains__(user_id):
+            raise Exception(_('User already in contact list'))
+        if self.user_id.__str__() == user_id:
+            raise Exception(_('Invalid request'))
+
         if friend and self:
             timestamp = timezone.now()
-            # init friend request data
-            if friend.extras.get('friend_request', None) is None:
-                friend.extras['friend_request'] = []
-            if self.extras.get('friend_request', None) is None:
-                self.extras['friend_request'] = []
-
             # create request
-            if friend.extras['friend_request'].get(self.id, None) is None:
+            if friend.extras['friend_request'].get(self.user_id.__str__(), None) is None:
                 # limit friend request
                 if friend.extras['friend_request'].keys().__len__() > settings.FRIEND_REQUEST_LIMIT:
                     raise Exception(_('Friend request limit exceed'))
 
-                friend.extras['friend_request'][self.user_id] = {
-                    'timestamp': timestamp,
+                friend.extras['friend_request'][self.user_id.__str__()] = {
+                    'timestamp': timestamp.__str__(),
                     'type': 'receiver'
                 }
-                self.extras['friend_request'][friend.user_id] = {
-                    'timestamp': timestamp,
+                self.extras['friend_request'][friend.user_id.__str__()] = {
+                    'timestamp': timestamp.__str__(),
                     'type': 'sender'
                 }
                 self.save()
@@ -189,29 +212,51 @@ class UserInfo(models.Model):
             raise Exception(_('Invalid input'))
         return True
 
-    @sync_to_async
     def process_friend_request(self, user_id, is_accept=True):
-        if self.extras.get('friend_request', None):
+        if isinstance(self.extras, dict) and self.extras.get('friend_request', None):
             if self.extras['friend_request'].get(user_id, None) \
                     and self.extras['friend_request'][user_id]['type'] == 'receiver':
                 # process request
+                sender = UserInfo.objects.get(user_id=user_id)
                 if is_accept:
-                    # self.friend.add(self.objects.get(user_id=user_id))
-                    self.contacts = user_id + '|' + self.contacts
+                    if not isinstance(sender.contacts, str):
+                        sender.contacts = ''
+                    if not isinstance(self.contacts, str):
+                        self.contacts = ''
+                    self.contacts = user_id.__str__() + '|' + self.contacts
+                    sender.contacts = self.user_id.__str__() + '|' + sender.contacts
                 self.extras['friend_request'].pop(user_id)
+                sender.extras['friend_request'].pop(self.user_id.__str__())
                 self.save()
+                sender.save()
                 return True
             else:
                 raise Exception(_('Invalid add friend request'))
         raise Exception(_('Invalid input'))
 
-    @sync_to_async
     def remove_contact(self, user_id):
-        contact_list = self.contacts.split('|')
+        contact_list = self.get_contacts()
         try:
+            owner_id = self.user_id
             contact_list.remove(user_id)
             self.contacts = '|'.join(contact_list)
             self.save()
+
+            # remove from other user
+            other = UserInfo.objects.filter(user_id=user_id).first()
+            contact_list = other.get_contacts()
+            contact_list.remove(owner_id)
+            other.contacts = '|'.join(contact_list)
+            other.save()
         except ValueError:
             return False
         return True
+
+    def get_contacts(self):
+        return ' '.join(self.contacts.split('|')).split()
+
+    def get_threads(self):
+        return self.threads.filter(memberinfo__is_blocked=False)
+
+    def get_user(self):
+        return UserModel.objects.filter(id=self.user_id).first()

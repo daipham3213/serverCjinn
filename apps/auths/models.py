@@ -4,10 +4,9 @@ from django.conf import settings
 from django.contrib.auth.models import PermissionsMixin, AbstractBaseUser, Permission
 from django.contrib.auth.validators import UnicodeUsernameValidator
 from django.db import models
+from django.db.models import JSONField
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
-
-from jsonfield import JSONField
 
 from .managers import AccountManager
 from datetime import datetime, date, time
@@ -53,7 +52,7 @@ class AuthUser(AbstractBaseUser, PermissionsMixin):
     date_created = models.DateTimeField(verbose_name=_('date created'), default=timezone.now, editable=False)
     date_modified = models.DateTimeField(verbose_name=_('date modified'), auto_now=True, editable=False)
     date_joined = models.DateTimeField(verbose_name=_('date joined'), default=timezone.now, editable=False)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = JSONField(blank=True, null=True, default=dict)
 
     objects = AccountManager()
 
@@ -88,13 +87,13 @@ class Token(models.Model):
     date_created = models.DateTimeField(verbose_name=_('date created'), default=timezone.now, editable=False)
     attempts = models.PositiveSmallIntegerField(verbose_name=_('attempts'), default=0)
 
-    others = JSONField(verbose_name=_('others'), blank=True, default={})
-    data = JSONField(default={})
+    others = JSONField(verbose_name=_('others'), blank=True, default=dict)
+    data = JSONField(default=dict)
     is_delete = models.BooleanField(default=False)
     is_register = models.BooleanField(verbose_name=_('org register'), default=False)
     is_active = models.BooleanField(verbose_name=_('active'), default=False)
     is_valid = models.BooleanField(verbose_name=_('Valid email or phone after login'), default=False)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = JSONField(blank=True, null=True, default=dict)
 
     class Meta:
         app_label = 'account'

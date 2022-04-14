@@ -1,5 +1,6 @@
 import hashlib
 import random
+from datetime import datetime
 
 
 class AuthenticationCredentials:
@@ -22,3 +23,9 @@ class AuthenticationCredentials:
         value = self.get_hash_value(auth_token)
         return value.__eq__(self.hashed_auth_token)
 
+
+def validate_date_str(date_text):
+    try:
+        return datetime.strptime(date_text, '%Y-%m-%d')
+    except ValueError:
+        raise ValueError("Incorrect data format, should be YYYY-MM-DD")

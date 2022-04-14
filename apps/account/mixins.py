@@ -56,7 +56,7 @@ class AuthRegisterMixin(Output):
             email = kwargs.get('email')
             others = {
                 'first_name': kwargs.get('first_name'),
-                'last_name': kwargs.get('first_name'),
+                'last_name': kwargs.get('last_name'),
             }
 
             username, email = cls.verifier(username, email)

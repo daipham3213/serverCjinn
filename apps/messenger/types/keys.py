@@ -4,16 +4,14 @@ from graphene_django import DjangoObjectType
 from apps.messenger.models import PreKey, SignedPreKey
 
 
-class PreKeyType(DjangoObjectType):
-    class Meta:
-        model = PreKey
-        fields = '__all__'
-
+class PreKeyType(graphene.ObjectType):
+    id = graphene.Int()
+    public_key = graphene.String()
 
 class SignedPreKeyType(DjangoObjectType):
     class Meta:
         model = SignedPreKey
-        fields = '__all__'
+        fields = ['id', 'public_key', 'signature']
 
 
 class PreKeyCount(graphene.ObjectType):
@@ -22,7 +20,7 @@ class PreKeyCount(graphene.ObjectType):
 
 class PreKeyItemType(graphene.ObjectType):
     device_id = graphene.String()
-    registration_id = graphene.String()
+    registration_id = graphene.Int()
     signed_pre_key = graphene.Field(SignedPreKeyType)
     pre_key = graphene.Field(PreKeyType)
 

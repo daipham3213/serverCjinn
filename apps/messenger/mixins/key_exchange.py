@@ -167,6 +167,7 @@ class VerifyDeviceTokenMixin(Output):
                         time_difference = datetime.datetime.now() - datetime.timedelta(
                             minutes=getattr(settings, 'LOGIN_OTP_EXPIRE', 15))
                     if token.date_created >= time_difference:
+
                         device = DeviceInfo.create(user=user, password=password,
                                                    registration_id=int(registration_id), name=device_name)
                         if device:
@@ -195,9 +196,14 @@ class RemoveDeviceMixin(Output):
 
                 if registration_id is None:
                     return cls(sucess=False, errors=Message.INVALID_DATA_FORMAT)
-                device = DeviceInfo.objects.filter(registration_id=registration_id, user=user)
-                if device is None:
+                device = DeviceInfo.objects.filter(user=user)
+                if device.filter(registration_id=registration_id).count() == 0:
                     return cls(success=False, errors=Message.INVALID_CREDENTIAL)
+                if device.count() == 1:
+                    user.identity_key = None
+                device = device.filter(registration_id=registration_id).first()
+                device.prekey_set.remove()
+                device.signed_pre_key.delete()
                 device.delete()
                 return cls(success=True, result={'message': 'Successfully remove device.'})
             else:
@@ -211,7 +217,7 @@ class UpdateDeviceInfoMixin(Output):
     # args = [gcm_id, apn_id, void_apn_id]
     # response result
     @classmethod
-    def resolve_mutation(cls, roo, info, **kwargs):
+    def resolve_mutation(cls, root, info, **kwargs):
         try:
             if hasattr(info.context, 'device'):
                 device: DeviceInfo = info.context.device

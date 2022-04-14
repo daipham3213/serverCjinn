@@ -1,23 +1,4 @@
-import json
-
-from django.forms import ModelForm
 from django.utils.translation import ugettext_lazy as _
-from jsonfield import JSONField
-
-
-# override module ModelForm when JSONField
-def get_initial_for_field(self, field, field_name):
-    if isinstance(field, JSONField):
-        try:
-            self.initial.update({
-                'description': json.dumps(json.loads(self.initial.get(field_name, "")), ensure_ascii=False)
-            })
-        except Exception as e:
-            print(e)
-    return super(ModelForm, self).get_initial_for_field(field, field_name)
-
-
-ModelForm.get_initial_for_field = get_initial_for_field
 
 KEY_VIEW_TOKEN = "c59132e3de6a4460a4d84b344371201d"
 

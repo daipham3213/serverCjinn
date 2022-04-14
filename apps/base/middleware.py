@@ -4,11 +4,13 @@ from re import sub
 from threading import local
 from urllib.parse import parse_qs
 
+from channels.auth import AuthMiddlewareStack
 from channels.db import database_sync_to_async
 from channels.middleware import BaseMiddleware
 from django.conf import settings
 from django.contrib.auth.models import AnonymousUser
 from django.core.cache import cache
+from django.db import close_old_connections
 from django.utils import translation, timezone
 from django.utils.deprecation import MiddlewareMixin
 
@@ -29,19 +31,15 @@ def get_user_extra():
 class CjinnMiddleware(MiddlewareMixin, Output):
     def process_request(self, request):
         is_dropdown = True if request.META.get('HTTP_VIEWTOKEN', False) == settings.KEY_VIEW_TOKEN else False
-        device_token = request.META.get('HTTP_DEVICE_TOKEN', None)
+        device_token = request.META.get('HTTP_DEVICETOKEN', None)
         header_token = request.META.get('HTTP_AUTHORIZATION', None)
         if device_token is not None:
             try:
-                device_token = sub('Bearer ', '', request.META.get('HTTP_DEVICE_TOKEN', None))
+                device_token = sub('Bearer ', '', request.META.get('HTTP_DEVICETOKEN', None))
                 device = DeviceInfo.objects.get(token=device_token)
-                # mark stale devices
                 device.last_seen = timezone.now()
                 device.is_stale = False
                 device.save()
-                for other_device in DeviceInfo.objects.exclude(token=device_token):
-                    other_device.is_stale = True
-                    other_device.save()
 
                 request.device = device
                 request.user = device.user
@@ -151,14 +149,3 @@ def get_user_by_token(token_key):
         return token.user
     except Token.DoesNotExist:
         return AnonymousUser()
-
-
-class TokenAuthMiddleware(BaseMiddleware):
-    def __init__(self, inner):
-        super().__init__(inner)
-
-    async def __call__(self, scope, receive, send):
-        params = parse_qs(scope["query_string"].decode())
-        scope['user'] = await get_user_by_token(params.get('token', None))
-
-        return await super().__call__(scope, receive, send)

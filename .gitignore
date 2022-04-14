@@ -5,4 +5,4 @@ _mirations/*
 **/local_settings.py
 _logs/*
 venv
-venv-linux
+data/firebase-adminsdk.json

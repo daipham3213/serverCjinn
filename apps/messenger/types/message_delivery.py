@@ -1,4 +1,7 @@
 import graphene
+from graphene.types.generic import GenericScalar
+
+from apps.base.converter import AutoCamelCasedScalar
 
 APN_VOIP_NOTIFICATION_PAYLOAD = "{\"aps\":{\"sound\":\"default\",\"alert\":{\"loc-key\":\"APN_Message\"}}}"
 APN_NSE_NOTIFICATION_PAYLOAD = "{\"aps\":{\"mutable-content\":1,\"alert\":{\"loc-key\":\"APN_Message\"}}}"
@@ -41,5 +44,38 @@ class MultiRecipientResponseType(graphene.ObjectType):
 
 
 class FriendOnlineType(graphene.ObjectType):
+    class Meta:
+        interfaces = (graphene.relay.Node,)
+
     user_id = graphene.UUID()
     status = graphene.String()
+
+
+class FriendOnlineConnection(graphene.Connection):
+    class Meta:
+        node = FriendOnlineType
+
+
+# class IncomingMessageType(graphene.ObjectType):
+
+
+class MessageEventType(graphene.ObjectType):
+    data = graphene.List(AutoCamelCasedScalar)  # GenericScalar()
+    type = graphene.Enum('EVENT_TYPE', [('NewMessage', 'incoming_message'), ('SeenMessage', 'seen_signal'),
+                                        ('MessageDelivered', 'completion_signal')])()
+
+    # def resolve_data(self, info, **kwargs):
+    #     return self.data
+
+
+class OnlineEvent(graphene.ObjectType):
+    user_id = graphene.UUID()
+    status = graphene.Enum('ONLINE_TYPE', [('Online', 'online'), ('Offline', 'offline')])()
+
+
+class MeetingType(graphene.ObjectType):
+    offers = AutoCamelCasedScalar()
+    answers = AutoCamelCasedScalar()
+    members = graphene.List(AutoCamelCasedScalar)
+    has_video = graphene.Boolean()
+    pk = graphene.UUID()

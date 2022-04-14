@@ -5,7 +5,8 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from django.views.decorators.csrf import csrf_exempt
-from graphene_django.views import GraphQLView
+from graphene_file_upload.django import FileUploadGraphQLView
+from graphql import GraphQLCoreBackend
 
 from apps.base.views import current_info
 
@@ -18,13 +19,17 @@ def graphiql(request):
         return http.response.HttpResponse(f.read())
 
 
+class GraphQLCustomCoreBackend(GraphQLCoreBackend):
+    def __init__(self, executor=None):
+        # type: (Optional[Any]) -> None
+        super().__init__(executor)
+        self.execute_params['allow_subscriptions'] = True
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
-    # re_path(fr'^{settings.WEBSOCKET_PATH}?/?',
-    #         csrf_exempt(GraphQLView.as_view(graphiql=getattr(settings, 'DEBUG', False)))),
-    path('graphql/', csrf_exempt(GraphQLView.as_view(graphiql=getattr(settings, 'DEBUG', False)))),
+    path('graphql/', csrf_exempt(FileUploadGraphQLView.as_view(graphiql=getattr(settings, 'DEBUG', False)))),
     path('', current_info),
-    path('graphqltemp/', graphiql),
     path('django-rq/', include('django_rq.urls')),
     path('i18n/', include('django.conf.urls.i18n'))
 ]

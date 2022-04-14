@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  web:
+    container_name: cjinn-web
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/usr/src/app/
+      - ./logs:/tmp
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    expose:
+      - "8000"
+    command: sh -c "./start.sh"
+    links:
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis
+    restart: always
+    networks:
+      - cjin
+
+
+  nginx:
+    container_name: cjinn-nginx
+    build:
+      context: deployment/nginx
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    expose:
+      - "8000"
+    volumes:
+      - ./collect_static/:/usr/share/nginx/html/static   # mount static files
+      - ./media/:/usr/share/nginx/html/media             # mount upload file
+      - ./deployment/nginx/ssl:/usr/share/nginx/ssl
+      - ./deployment/nginx/nginx.conf:/etc/nginx/conf.d/nginx.conf
+    links:
+      - web
+    depends_on:
+      - web
+    restart: always
+    networks:
+      - cjin
+
+
+  db:
+    container_name: cjinn-database
+    image: 'postgres:13'
+    build:
+      context: deployment/pgsql
+      dockerfile: Dockerfile
+    ports:
+      - '${FORWARD_DB_PORT:-5432}:5432'
+    environment:
+      PGDATA: '/var/lib/postgresql/data'
+      PGPASSWORD: '${DB_PASSWORD:-secret}'
+      POSTGRES_DB: '${DB_DATABASE}'
+      POSTGRES_USER: '${DB_USERNAME}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD:-secret}'
+    volumes:
+      - 'pgdata:/var/lib/postgresql/data'
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-q", "-d", "${DB_DATABASE}", "-U", "${DB_USERNAME}" ]
+      retries: 3
+      timeout: 5s
+    networks:
+      - cjin
+
+
+  redis:
+    container_name: cjinn-redis
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    restart: always
+    networks:
+      - cjin
+
+networks:
+  cjin:
+    name: 'cjinn-networks'
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local

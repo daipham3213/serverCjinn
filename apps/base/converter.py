@@ -1,16 +1,16 @@
 from uuid import UUID
 from datetime import datetime, date
 
+import django.db.models
 from graphene import String
 from graphene_django.converter import convert_django_field
-from jsonfield import JSONField
 
 from graphene.types.generic import GenericScalar
 from graphene.utils.str_converters import to_camel_case, to_snake_case
 
 
 def FieldsPatches(auto_camel_scalar=True):
-    @convert_django_field.register(JSONField)
+    @convert_django_field.register(django.db.models.JSONField)
     def convert_JSONField_to_GenericScalar(field, registry=None):
         scalar = AutoCamelCasedScalar if auto_camel_scalar else GenericScalar
         return scalar(description=field.help_text, required=not field.null)

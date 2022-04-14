@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 
 import django.db.models.options as options
-import django_opentracing
 from django.utils.translation import ugettext_lazy as _
 from django_filters import rest_framework as filters
 from firebase_admin import initialize_app, credentials
@@ -18,12 +17,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4b_6g*ebq8%4u2=zx7o6xy=0j^a3f6(xzsi+azv#nz#71946x+'
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = int(os.environ.get("DEBUG", default=0))
 
-ALLOWED_HOSTS = ['*']
+# 'DJANGO_ALLOWED_HOSTS' should be a single string of hosts with a space between each.
+# For example: 'DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]'
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 
 # Application definition
 
@@ -34,22 +34,25 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'fcm_django',
     'corsheaders',
     'graphene_django',
     'django_filters',
+    'cloudinary',
     'django_rq',
     'channels',
     'apps.base',
     'apps.auths',
     'apps.account',
     'apps.log',
-    'apps.messenger'
+    'apps.messenger.apps.MessengerConfig'
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -57,7 +60,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'apps.base.middleware.CjinnMiddleware',
     'apps.base.middleware.OnlineNowMiddleware',
-    'django_opentracing.OpenTracingMiddleware',
 ]
 
 ROOT_URLCONF = 'serverCjinn.urls'
@@ -83,15 +85,17 @@ WSGI_APPLICATION = 'serverCjinn.wsgi.application'
 ASGI_APPLICATION = 'serverCjinn.router.application'
 
 CORS_ALLOWED_ORIGINS = ['http://127.0.0.1', 'http://192.168.1.10', 'http://192.168.1.9']
-
-SESSION_COOKIE_SECURE = True
-SESSION_COOKIE_DOMAIN = 'localhost'
+CORS_ALLOW_METHODS = [
+    "OPTIONS",
+    "PATCH",
+    "POST",
+]
 
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [('redis', 6379)],
         },
     },
 }
@@ -99,7 +103,7 @@ CHANNEL_LAYERS = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://127.0.0.1:6379/0",
+        "LOCATION": "redis://redis:6379/0",
         "OPTIONS": {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
             "COMPRESSOR": "django_redis.compressors.zlib.ZlibCompressor",
@@ -108,26 +112,27 @@ CACHES = {
 }
 
 RQ_QUEUES = {
-    # 'default': {
-    #     'HOST': 'localhost',
-    #     'PORT': 6379,
-    #     'DB': 0,
-    # },
     'default': {
         'USE_REDIS_CACHE': 'default',
     },
 }
+
+CACHE_TIMEOUT = 10 * 60 * 1000  # 10 MIN
+
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'railway',
-        'USER': 'root',
-        'PASSWORD': 'MvMvdAgS9Zdw2TkE5b49',
-        'HOST': 'containers-us-west-11.railway.app',
-        'PORT': '5856'
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': os.environ.get('DB_DATABASE', 'db-mda'),
+        'OPTIONS': {
+            'options': '-c search_path=public'
+        },
+        'USER': os.environ.get('DB_USERNAME', 'admin'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', '123456@abc'),
+        'HOST': 'db',
+        'PORT': '5432'
     },
 }
 
@@ -148,7 +153,7 @@ FCM_DJANGO_SETTINGS = {
 WEBSOCKET_PATH = 'graphql'
 GRAPHENE = {
     "SCHEMA": "apps.base.schema.schema",
-    "SUBSCRIPTION_PATH": '/' + WEBSOCKET_PATH,
+    "SUBSCRIPTION_PATH": '/' + WEBSOCKET_PATH + '/',
     "DJANGO_CHOICE_FIELD_ENUM_V3_NAMING": True,
     "GRAPHIQL_HEADER_EDITOR_ENABLED": True,
     "SCHEMA_OUTPUT": "data/schema.json",
@@ -173,9 +178,9 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 AUTH_USER_MODEL = 'account.User'
+
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
-    'django.contrib.auth.backends.RemoteUserBackend',
     'apps.base.authentication.TokenAuthentication',
     'apps.auths.backends.account_backend.AccountBackend',
 ]
@@ -218,7 +223,20 @@ try:
 except Exception as e:
     print(e)
 
-try:
-    from .local_settings import *
-except (ImportError, Exception) as e:
-    print(e)
+# try:
+#     from .local_settings import *
+# except (ImportError, Exception) as e:
+#     print(e)
+
+# if DEBUG:
+#     for queueConfig in RQ_QUEUES.values():
+#         queueConfig['ASYNC'] = False
+
+
+import cloudinary
+
+cloudinary.config(
+    cloud_name="projectmngapi",
+    api_key="296254975766871",
+    api_secret="AkZ4OUJQbyyn0NcgiM92D9TbppI"
+)

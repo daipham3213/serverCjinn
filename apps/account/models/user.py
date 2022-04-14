@@ -3,7 +3,6 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
-from jsonfield import JSONField
 
 from uuid import uuid4
 
@@ -23,7 +22,7 @@ class RoleGroup(models.Model):
     ref_id = models.UUIDField(null=True, default=None, verbose_name=_('reference ID'))
     ref_type = models.CharField(choices=settings.ROLE_GROUP_REF_TYPE, max_length=100, null=True, default=None)
     is_hidden = models.BooleanField(default=False)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = models.JSONField(blank=True, null=True, default=dict)
     is_default = models.BooleanField(default=False)
     code_system = models.CharField(max_length=100, null=True, default=None)
 
@@ -124,13 +123,14 @@ class User(AuthUser):
             ('delete_account_user', _('Can delete user'))
         )
 
+
 # Login social
 # class UserSocial(models.Model):
 #     id = models.UUIDField(default=uuid4, primary_key=True, editable=False)
 #     user = models.ForeignKey(User, on_delete=models.CASCADE)
 #     provider = models.CharField(max_length=100)
 #     uid = models.CharField(max_length=255)
-#     extra_data = JSONField(default={})
+#     extra_data = JSONField(default=dict)
 #     secret_key = models.CharField(max_length=64)
 #     date_created = models.DateTimeField(verbose_name='date created', default=timezone.now, editable=False)
 #     date_modified = models.DateTimeField(verbose_name='date modified', auto_now=True, editable=False)
@@ -163,7 +163,7 @@ class UserRoleGroup(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     group = models.ForeignKey(RoleGroup, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
         default_permissions = ()
@@ -190,7 +190,7 @@ class VerifyContact(models.Model):
     users = models.ManyToManyField(User, through='VerifyUser', symmetrical=False, blank=True,
                                    related_name='user_verify', related_query_name='users')
     date_created = models.DateTimeField(default=timezone.now)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
         verbose_name = _('Verify Contact Account')
@@ -208,7 +208,7 @@ class VerifyUser(models.Model):
     verify = models.ForeignKey(VerifyContact, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     date_created = models.DateTimeField(default=timezone.now)
-    extras = JSONField(blank=True, null=True)
+    extras = models.JSONField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('M2M Verify contact to User')
@@ -231,11 +231,11 @@ class BackUpRoleSystem(models.Model):
     ref_id = models.UUIDField(null=True, default=None, verbose_name=_('reference ID'))
     ref_type = models.CharField(choices=settings.ROLE_GROUP_REF_TYPE, max_length=100, null=True, default=None)
     is_hidden = models.BooleanField(default=False)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = models.JSONField(blank=True, null=True, default=dict)
     is_default = models.BooleanField(default=False)
     code_system = models.CharField(max_length=100, null=True, default=None)
-    permissions = JSONField(blank=True, null=True)
-    user_list = JSONField(blank=True, null=True)
+    permissions = models.JSONField(blank=True, null=True)
+    user_list = models.JSONField(blank=True, null=True)
     date_created = models.DateTimeField(verbose_name='date created', default=timezone.now, editable=False)
     date_modified = models.DateTimeField(verbose_name='date modified', auto_now=True)
 

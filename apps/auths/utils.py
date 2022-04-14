@@ -63,7 +63,6 @@ def user_details(request, user, last_login):
     # id_n
     ctx = {
         'id': user.id,
-        'id_n': user.id,
         'username': user.username,
         'first_name': user.first_name,
         'last_name': user.last_name,

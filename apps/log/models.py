@@ -3,14 +3,13 @@ from django.utils import timezone
 from django.conf import settings
 from django.db import models
 from uuid import uuid4
-from jsonfield import JSONField
 
 
 class AuthorizationLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
     remarks = models.TextField(verbose_name=_('descriptions'))
-    data = JSONField(null=True, blank=True, verbose_name=_('more data'))
+    data = models.JSONField(null=True, blank=True, verbose_name=_('more data'))
 
     user_created = models.UUIDField(verbose_name=_('user created'), blank=False, null=True, editable=False)
     date_created = models.DateTimeField(verbose_name='date created', default=timezone.now, editable=False)
@@ -18,7 +17,7 @@ class AuthorizationLog(models.Model):
     is_active = models.BooleanField(verbose_name=_('active'), default=True)
     is_delete = models.BooleanField(verbose_name=_('delete'), default=False)
     in_workflow = models.BooleanField(verbose_name=_('True when it is new document in workflow.'), default=False)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
         verbose_name = _('Log authorization')
@@ -32,13 +31,14 @@ class ActivityLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
     remarks = models.TextField(verbose_name=_('descriptions'))
-    data = JSONField(null=True, blank=True, verbose_name=_('more data'))
+    data = models.JSONField(null=True, blank=True, verbose_name=_('more data'))
     code_document = models.CharField(max_length=255, null=True, blank=True, verbose_name=_('code feature code'))
     doc_id = models.UUIDField(null=True, verbose_name=_('document activity'))
     doc_name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('document name'))
     node_id = models.UUIDField(null=True, verbose_name=_('node id'))
     node_name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('node name'))
-    node_type = models.SmallIntegerField(choices=settings.ACTIVITY_NODE_TYPE, default=1)  # node_type != 0 <=> != system --> node_id required
+    node_type = models.SmallIntegerField(choices=settings.ACTIVITY_NODE_TYPE,
+                                         default=1)  # node_type != 0 <=> != system --> node_id required
     reason = models.TextField(blank=True, null=True, verbose_name=_('reason'))
 
     user = models.UUIDField(null=True)
@@ -50,7 +50,7 @@ class ActivityLog(models.Model):
     is_active = models.BooleanField(verbose_name=_('active'), default=True)
     is_delete = models.BooleanField(verbose_name=_('delete'), default=False)
     in_workflow = models.BooleanField(verbose_name=_('True when it is new document in workflow.'), default=False)
-    extras = JSONField(blank=True, null=True, default={})
+    extras = models.JSONField(blank=True, null=True, default=dict)
 
     class Meta:
         verbose_name = _('Log authorization')
@@ -67,9 +67,9 @@ class HistoryLog(models.Model):
     code_document = models.CharField(max_length=255, null=True, blank=True)
     doc_id = models.UUIDField(null=True, verbose_name=_('document history'))
     doc_name = models.CharField(max_length=255, blank=True, null=True, verbose_name=_('document name'))
-    doc_detail = JSONField(null=True, verbose_name=_('document detail'))
-    doc_new = JSONField(null=True, verbose_name=_('document new detail'))
-    doc_change = JSONField(null=True, verbose_name=_('document changed'))
+    doc_detail = models.JSONField(null=True, verbose_name=_('document detail'))
+    doc_new = models.JSONField(null=True, verbose_name=_('document new detail'))
+    doc_change = models.JSONField(null=True, verbose_name=_('document changed'))
     activity_name = models.CharField(max_length=100, choices=settings.HISTORY_ACTION_NAME, default=0)
 
     user = models.UUIDField(null=True)
@@ -80,7 +80,7 @@ class HistoryLog(models.Model):
     is_active = models.BooleanField(default=True, verbose_name=_('active'))
     is_delete = models.BooleanField(default=False, verbose_name=_('deleted'))
     in_workflow = models.BooleanField(default=False, verbose_name=_('in workflow'))
-    extras = JSONField(blank=True, null=True)
+    extras = models.JSONField(blank=True, null=True)
 
     class Meta:
         verbose_name = _('History')

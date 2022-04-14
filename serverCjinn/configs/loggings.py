@@ -64,7 +64,7 @@ LOGGING = {
             'level': 'INFO'
         },
         "rq.worker": {
-            "handlers": ["rq_console", "sentry"],
+            "handlers": ["rq_console"],
             "level": "DEBUG"
         },
     },
